@@ -32,7 +32,7 @@ export default define.page(function Home() {
             </p>
             <div class="hero-stats">
               <span>
-                <strong>06</strong> perguntas
+                <strong>16</strong> perguntas
               </span>
               <span>
                 <strong>20s</strong> por rodada

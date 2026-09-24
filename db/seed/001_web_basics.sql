@@ -19,7 +19,7 @@ VALUES
   ('web-q13', 'web-basics', 13, 'Para que serve principalmente o display: flex no CSS?', 20),
   ('web-q14', 'web-basics', 14, 'O que diferencia o HTTPS do HTTP?', 20),
   ('web-q15', 'web-basics', 15, 'Qual declaração JavaScript cria uma variável que não pode ser reatribuída?', 20),
-  ('web-q16', 'web-basics', 16, 'Qual formato é o mais comum para trocar dados entre cliente e servidor em APIs web?', 20)
+  ('web-q16', 'web-basics', 16, 'Um elemento tem id="x", class="c" e style="color: red". No CSS: #x { color: blue !important } e .c { color: green }. Se o JS executar document.getElementById("x").style.color = "orange";, de que cor fica o texto?', 20)
 ON CONFLICT (id) DO UPDATE SET
   position = EXCLUDED.position,
   prompt = EXCLUDED.prompt,
@@ -102,10 +102,10 @@ VALUES
   ('web-q15-c', 'web-q15', 3, 'const', true),
   ('web-q15-d', 'web-q15', 4, 'static', false),
 
-  ('web-q16-a', 'web-q16', 1, 'JSON', true),
-  ('web-q16-b', 'web-q16', 2, 'CSV', false),
-  ('web-q16-c', 'web-q16', 3, 'PNG', false),
-  ('web-q16-d', 'web-q16', 4, 'SQL', false)
+  ('web-q16-a', 'web-q16', 1, 'Vermelho (red)', false),
+  ('web-q16-b', 'web-q16', 2, 'Azul (blue)', true),
+  ('web-q16-c', 'web-q16', 3, 'Verde (green)', false),
+  ('web-q16-d', 'web-q16', 4, 'Laranja (orange)', false)
 ON CONFLICT (id) DO UPDATE SET
   position = EXCLUDED.position,
   label = EXCLUDED.label,
