@@ -1,5 +1,8 @@
 # Fresh Quiz
 
+> Também existe uma versão deste projeto em Spring Boot + Angular:
+> [angular-spring-quiz](https://github.com/ErickHTF/angular-spring-quiz).
+
 Jogo de perguntas em tempo real sobre fundamentos da web, construído com Fresh,
 Preact, SSE e PostgreSQL.
 
