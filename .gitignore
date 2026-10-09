@@ -12,3 +12,10 @@ _fresh/
 node_modules/
 vendor/
 
+
+# IDE (JetBrains); shared VS Code settings in .vscode/ stay versioned
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
