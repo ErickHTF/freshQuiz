@@ -78,8 +78,8 @@ There are two independent workflows, both manual:
 
 - **App** (_Actions → App → Run workflow_): builds, ships only the code,
   restarts the service and checks `/health`; if it fails, it restores the
-  previous release. It never touches the database. Restarting drops any games
-  in progress (ephemeral state).
+  previous release. It never touches the database. Restarting drops any games in
+  progress (ephemeral state).
 - **Database** (_Actions → Database → Run workflow_): type `RESET` and the
   Postgres container is torn down and recreated (`down -v` + `up`), with
   migrations and seed applied on init. Wipes all data.
@@ -93,25 +93,25 @@ The provisioning guide is in [`deploy/SETUP.md`](deploy/SETUP.md).
 - The host's name is highlighted for everyone, in a section separate from the
   ranking.
 - The host watches the voting live (with a timer until the reveal) and starts
-  the quiz; each question's answer is revealed automatically when time runs
-  out. After the reveal, the host moves on to the next question (or to the
-  final results) or ends early ("Encerrar quiz").
+  the quiz; each question's answer is revealed automatically when time runs out.
+  After the reveal, the host moves on to the next question (or to the final
+  results) or ends early ("Encerrar quiz").
 - At the end, "Jogar novamente" (Play again) sends the room back to the lobby,
   resetting scores and answers — connected players stay in the room.
 - "Sair da sala" (host) and "Sair" (player) clear the session cookies.
 
 ## API
 
-| Method | Route                      | Description                                |
-| ------ | -------------------------- | ------------------------------------------ |
-| POST   | `/api/games`               | Creates a room (sets the host cookie).     |
-| POST   | `/api/games/:code/join`    | Joins a room (sets the player cookies).    |
-| GET    | `/api/games/:code/state`   | Current game state.                        |
-| GET    | `/api/games/:code/events`  | SSE stream with real-time state.           |
-| POST   | `/api/games/:code/start`   | Starts the first question (host).          |
-| POST   | `/api/games/:code/answer`  | Records the player's answer.               |
-| POST   | `/api/games/:code/next`    | Advances past the revealed question (host).|
-| POST   | `/api/games/:code/finish`  | Ends the quiz early (host).                |
-| POST   | `/api/games/:code/restart` | Back to the lobby, resetting scores (host).|
-| POST   | `/api/games/:code/leave`   | Clears the session cookies.                |
-| GET    | `/health`                  | Health check (app + database).             |
+| Method | Route                      | Description                                 |
+| ------ | -------------------------- | ------------------------------------------- |
+| POST   | `/api/games`               | Creates a room (sets the host cookie).      |
+| POST   | `/api/games/:code/join`    | Joins a room (sets the player cookies).     |
+| GET    | `/api/games/:code/state`   | Current game state.                         |
+| GET    | `/api/games/:code/events`  | SSE stream with real-time state.            |
+| POST   | `/api/games/:code/start`   | Starts the first question (host).           |
+| POST   | `/api/games/:code/answer`  | Records the player's answer.                |
+| POST   | `/api/games/:code/next`    | Advances past the revealed question (host). |
+| POST   | `/api/games/:code/finish`  | Ends the quiz early (host).                 |
+| POST   | `/api/games/:code/restart` | Back to the lobby, resetting scores (host). |
+| POST   | `/api/games/:code/leave`   | Clears the session cookies.                 |
+| GET    | `/health`                  | Health check (app + database).              |
