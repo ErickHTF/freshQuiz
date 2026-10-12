@@ -8,6 +8,7 @@ import {
   getState,
   joinGame,
   revealCurrentQuestion,
+  skipQuestion,
   startGame,
   submitAnswer,
 } from "./game/index.ts";
@@ -98,6 +99,53 @@ const dbTestOptions = {
 };
 
 if (databaseUp) {
+  Deno.test(
+    "skip awards submitted points exactly once and closes answers",
+    dbTestOptions,
+    async () => {
+      await runScenario(async (fx) => {
+        await addPlayer(fx, "Ana");
+        await addPlayer(fx, "Bia");
+        await startGame(fx.code);
+        const state = await getState(fx.code, { role: "host" });
+        const [correct] = await sql<{ id: string }[]>`
+        SELECT id FROM choices WHERE question_id = ${
+          state!.currentQuestion!.id
+        } AND is_correct = true
+      `;
+        const points = await submitAnswer(
+          fx.code,
+          fx.players[0].playerToken,
+          correct.id,
+        );
+        assert(points > 0);
+        await skipQuestion(fx.code);
+        await revealCurrentQuestion(fx.code);
+        const revealed = await getState(fx.code, { role: "host" });
+        assertEquals(revealed?.status, "reveal");
+        assertEquals(revealed?.deadlineAt, null);
+        assertEquals(
+          revealed?.players.find((p) => p.id === fx.players[0].playerId)?.score,
+          points,
+        );
+        assertEquals(
+          revealed?.players.find((p) => p.id === fx.players[1].playerId)?.score,
+          0,
+        );
+        await assertRejects(() =>
+          submitAnswer(fx.code, fx.players[1].playerToken, correct.id)
+        );
+        await advanceGame(fx.code);
+        assertEquals(
+          (await getState(fx.code))?.players.find((p) =>
+            p.id === fx.players[0].playerId
+          )?.score,
+          points,
+        );
+      });
+    },
+  );
+
   Deno.test(
     "host must provide a nickname to create a game",
     dbTestOptions,

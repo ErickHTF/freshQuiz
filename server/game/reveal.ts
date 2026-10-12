@@ -42,7 +42,7 @@ export async function revealCurrentQuestion(code: string): Promise<void> {
   await sql.begin(async (transaction) => {
     const updated = await transaction`
       UPDATE games
-      SET status = 'reveal'
+      SET status = 'reveal', question_deadline_at = NULL
       WHERE id = ${game.id} AND status = 'question'
       RETURNING id
     `;

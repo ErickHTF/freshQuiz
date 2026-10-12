@@ -16,7 +16,11 @@ import {
   getQuestionChoices,
   hasAnsweredQuestion,
 } from "./repository.ts";
-import { cancelReveal, scheduleReveal } from "./reveal.ts";
+import {
+  cancelReveal,
+  revealCurrentQuestion,
+  scheduleReveal,
+} from "./reveal.ts";
 
 export interface StateViewer {
   role?: "host" | "player";
@@ -283,12 +287,7 @@ export async function skipQuestion(code: string): Promise<void> {
     throw new Error("Não há pergunta em andamento para pular.");
   }
 
-  cancelReveal(game.id);
-  await sql`
-    UPDATE games
-    SET status = 'reveal', question_deadline_at = NULL
-    WHERE id = ${game.id} AND status = 'question'
-  `;
+  await revealCurrentQuestion(code);
 }
 
 export async function advanceGame(code: string): Promise<void> {
