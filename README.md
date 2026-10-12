@@ -6,6 +6,14 @@
 Real-time quiz game about web fundamentals, built with Fresh, Preact, SSE and
 PostgreSQL.
 
+## Screenshots
+
+![Home page: join a game with a room code and a nickname](docs/screenshots/home.jpg)
+
+| Host view: live voting                                          | Final podium and ranking                    |
+| --------------------------------------------------------------- | ------------------------------------------- |
+| ![Host view with live voting](docs/screenshots/live-voting.jpg) | ![Final podium](docs/screenshots/final.jpg) |
+
 ## Requirements
 
 - Deno 2+
