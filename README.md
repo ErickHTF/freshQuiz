@@ -1,17 +1,17 @@
 # Fresh Quiz
 
-> Também existe uma versão deste projeto em Spring Boot + Angular:
+> There's also a Spring Boot + Angular version of this project:
 > [angular-spring-quiz](https://github.com/ErickHTF/angular-spring-quiz).
 
-Jogo de perguntas em tempo real sobre fundamentos da web, construído com Fresh,
-Preact, SSE e PostgreSQL.
+Real-time quiz game about web fundamentals, built with Fresh, Preact, SSE and
+PostgreSQL.
 
-## Requisitos
+## Requirements
 
 - Deno 2+
-- Docker e Docker Compose
+- Docker and Docker Compose
 
-## Desenvolvimento
+## Development
 
 ```bash
 cp .env.example .env
@@ -19,95 +19,99 @@ docker compose up -d
 deno task dev
 ```
 
-Ao criar o container do Postgres, `db/init/01-setup.sh` aplica automaticamente
-as migrações de `db/migrations/` e o seed (`db/seed/001_web_basics.sql`). Para
-recriar o banco do zero (isso apaga os dados):
+When the Postgres container is created, `db/init/01-setup.sh` automatically
+applies the migrations in `db/migrations/` and the seed
+(`db/seed/001_web_basics.sql`). To recreate the database from scratch (this
+wipes the data):
 
 ```bash
 docker compose down -v && docker compose up -d
 ```
 
-Se preferir rodar as tarefas manualmente (por exemplo, contra um banco já
-existente), use `deno task db:migrate` e `deno task db:seed`.
+If you'd rather run the tasks manually (for example, against an existing
+database), use `deno task db:migrate` and `deno task db:seed`.
 
-O Postgres é publicado na porta `5433` da máquina para não conflitar com outros
-projetos locais; ajuste `DATABASE_URL` em `.env` se necessário.
+Postgres is published on host port `5433` to avoid clashing with other local
+projects; adjust `DATABASE_URL` in `.env` if needed.
 
-Abra `http://localhost:5173/` para entrar em uma partida ou `/host` para criar
-uma sala.
+Open `http://localhost:5173/` to join a game or `/host` to create a room.
 
-## Comandos
+## Commands
 
-- `deno task dev`: inicia o servidor de desenvolvimento.
-- `deno task db:migrate`: cria o schema PostgreSQL.
-- `deno task db:seed`: insere o quiz de fundamentos da web.
-- `deno task check`: executa formatação, lint e typecheck.
-- `deno task test`: executa os testes.
-- `deno task build`: gera a build de produção.
+- `deno task dev`: starts the development server.
+- `deno task db:migrate`: creates the PostgreSQL schema.
+- `deno task db:seed`: inserts the web fundamentals quiz.
+- `deno task check`: runs formatting, lint and typecheck.
+- `deno task test`: runs the tests.
+- `deno task build`: creates the production build.
 
-O quiz inicial contém perguntas de HTML, CSS, HTTP, JavaScript, seletores CSS e
+The initial quiz has questions on HTML, CSS, HTTP, JavaScript, CSS selectors and
 APIs.
 
-## Estrutura
+## Structure
 
-- `routes/`: rotas e handlers HTTP (roteamento por arquivo do Fresh); a API fica
-  em `routes/api/`.
-- `islands/`: componentes interativos hidratados no cliente (SSE, votação,
+- `routes/`: HTTP routes and handlers (Fresh file-based routing); the API lives
+  in `routes/api/`.
+- `islands/`: interactive components hydrated on the client (SSE, voting,
   ranking).
-- `components/`: componentes apenas de SSR, sem JavaScript no cliente.
-- `server/`: lógica exclusiva do servidor; `server/game/` separa o domínio da
-  partida em repositório, reveal por timer e serviços.
-- `shared/`: tipos e funções isomórficas usadas pelo servidor e pelos islands.
-- `db/`: migrações, seed e init do Postgres; `db/scripts/` contém os comandos
-  `db:migrate` e `db:seed`.
-- `assets/`: CSS processado pelo Vite (importado em `client.ts`).
-- `static/`: arquivos servidos sem processamento (favicon, logo).
-- `deploy/`: unit do systemd, scripts de deploy/reset e guia de provisionamento.
-- `.github/`: workflows de CI e de deploy manual.
+- `components/`: SSR-only components, with no client-side JavaScript.
+- `server/`: server-only logic; `server/game/` splits the game domain into
+  repository, timed reveal and services.
+- `shared/`: isomorphic types and functions used by both the server and the
+  islands.
+- `db/`: migrations, seed and Postgres init; `db/scripts/` holds the
+  `db:migrate` and `db:seed` commands.
+- `assets/`: CSS processed by Vite (imported in `client.ts`).
+- `static/`: files served as-is (favicon, logo).
+- `deploy/`: systemd unit, deploy/reset scripts and provisioning guide.
+- `.github/`: CI and manual deploy workflows.
 
-A pasta `_fresh/` é o resultado do build (gerada, fora do controle de versão).
+The `_fresh/` folder is the build output (generated, not version-controlled).
 
 ## Deploy
 
-A produção roda em uma EC2 (Amazon Linux), com `systemd` na porta `:8000`. O
-banco `fresh_quiz` roda em Postgres via Docker Compose na instância.
+Production runs on an EC2 instance (Amazon Linux), with `systemd` on port
+`:8000`. The `fresh_quiz` database runs on Postgres via Docker Compose on the
+instance.
 
-São dois workflows independentes, ambos manuais:
+There are two independent workflows, both manual:
 
-- **App** (_Actions → App → Run workflow_): builda, envia só o código, reinicia
-  o serviço e valida `/health`; se falhar, restaura a release anterior. Nunca
-  toca no banco. Reiniciar derruba as partidas em andamento (estado efêmero).
-- **Database** (_Actions → Database → Run workflow_): digita `RESET` e o
-  container do Postgres é derrubado e recriado (`down -v` + `up`), com as
-  migrações e o seed aplicados no init. Apaga todos os dados.
+- **App** (_Actions → App → Run workflow_): builds, ships only the code,
+  restarts the service and checks `/health`; if it fails, it restores the
+  previous release. It never touches the database. Restarting drops any games
+  in progress (ephemeral state).
+- **Database** (_Actions → Database → Run workflow_): type `RESET` and the
+  Postgres container is torn down and recreated (`down -v` + `up`), with
+  migrations and seed applied on init. Wipes all data.
 
-O guia de provisionamento está em [`deploy/SETUP.md`](deploy/SETUP.md).
+The provisioning guide is in [`deploy/SETUP.md`](deploy/SETUP.md).
 
-## Ciclo da partida
+## Game Lifecycle
 
-- Host cria a sala em `/host` com um apelido e compartilha o código.
-- Jogadores entram pela página inicial com um apelido.
-- O nome do host aparece em destaque, em seção separada do ranking, para todos.
-- O host acompanha a votação ao vivo (com timer até a revelação) e começa o
-  quiz; a resposta de cada pergunta é revelada automaticamente quando o tempo
-  acaba. Depois da revelação, o host avança para a próxima pergunta (ou para o
-  resultado final) ou encerra antes do fim ("Encerrar quiz").
-- Ao final, "Jogar novamente" devolve a sala ao lobby zerando placar e respostas
-  — os jogadores conectados permanecem na sala.
-- "Sair da sala" (host) e "Sair" (jogador) limparam os cookies da sessão.
+- The host creates a room at `/host` with a nickname and shares the code.
+- Players join from the home page with a nickname.
+- The host's name is highlighted for everyone, in a section separate from the
+  ranking.
+- The host watches the voting live (with a timer until the reveal) and starts
+  the quiz; each question's answer is revealed automatically when time runs
+  out. After the reveal, the host moves on to the next question (or to the
+  final results) or ends early ("Encerrar quiz").
+- At the end, "Jogar novamente" (Play again) sends the room back to the lobby,
+  resetting scores and answers — connected players stay in the room.
+- "Sair da sala" (host) and "Sair" (player) clear the session cookies.
 
 ## API
 
-| Método | Rota                       | Descrição                                  |
+| Method | Route                      | Description                                |
 | ------ | -------------------------- | ------------------------------------------ |
-| POST   | `/api/games`               | Cria sala (define cookie de host).         |
-| POST   | `/api/games/:code/join`    | Entra na sala (define cookies do jogador). |
-| GET    | `/api/games/:code/state`   | Estado atual da partida.                   |
-| GET    | `/api/games/:code/events`  | Stream SSE com o estado em tempo real.     |
-| POST   | `/api/games/:code/start`   | Inicia a primeira pergunta (host).         |
-| POST   | `/api/games/:code/answer`  | Registra a resposta do jogador.            |
-| POST   | `/api/games/:code/next`    | Avança a pergunta revelada (host).         |
-| POST   | `/api/games/:code/finish`  | Encerra o quiz antecipadamente (host).     |
-| POST   | `/api/games/:code/restart` | Volta ao lobby zerando placar (host).      |
-| POST   | `/api/games/:code/leave`   | Limpa os cookies da sessão.                |
-| GET    | `/health`                  | Health check (app + banco).                |
+| POST   | `/api/games`               | Creates a room (sets the host cookie).     |
+| POST   | `/api/games/:code/join`    | Joins a room (sets the player cookies).    |
+| GET    | `/api/games/:code/state`   | Current game state.                        |
+| GET    | `/api/games/:code/events`  | SSE stream with real-time state.           |
+| POST   | `/api/games/:code/start`   | Starts the first question (host).          |
+| POST   | `/api/games/:code/answer`  | Records the player's answer.               |
+| POST   | `/api/games/:code/next`    | Advances past the revealed question (host).|
+| POST   | `/api/games/:code/finish`  | Ends the quiz early (host).                |
+| POST   | `/api/games/:code/restart` | Back to the lobby, resetting scores (host).|
+| POST   | `/api/games/:code/leave`   | Clears the session cookies.                |
+| GET    | `/health`                  | Health check (app + database).             |
