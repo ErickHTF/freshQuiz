@@ -1,125 +1,111 @@
-# Fresh Quiz
+# Fresh Quiz — Fresh + Preact
 
-> There's also a Spring Boot + Angular version of this project:
-> [angular-spring-quiz](https://github.com/ErickHTF/angular-spring-quiz).
+A real-time multiplayer quiz about web fundamentals: create a room, share its
+code, and compete with friends through timed questions and a live leaderboard.
 
-Real-time quiz game about web fundamentals, built with Fresh, Preact, SSE and
-PostgreSQL.
+**Status:** Playable learning project · Original Fresh/Preact implementation.
 
-## Screenshots
+[![CI](https://github.com/ErickHTF/freshQuiz/actions/workflows/ci.yml/badge.svg)](https://github.com/ErickHTF/freshQuiz/actions/workflows/ci.yml)
 
-![Home page: join a game with a room code and a nickname](docs/screenshots/home.jpg)
+[Run locally](#run-locally) · [Development guide](docs/development.md) ·
+[Architecture](docs/architecture.md) · [API reference](docs/api.md)
 
-| Host view: live voting                                          | Final podium and ranking                    |
-| --------------------------------------------------------------- | ------------------------------------------- |
-| ![Host view with live voting](docs/screenshots/live-voting.jpg) | ![Final podium](docs/screenshots/final.jpg) |
+![Fresh Quiz home page with room code and nickname fields](docs/screenshots/home.jpg)
 
-## Requirements
+| Live voting — host view                                                                    | Final podium and ranking                                                   |
+| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| ![Host screen showing voting progress during a question](docs/screenshots/live-voting.jpg) | ![Podium and leaderboard at the end of a quiz](docs/screenshots/final.jpg) |
 
-- Deno 2+
-- Docker and Docker Compose
+_The game interface is in Brazilian Portuguese._
 
-## Development
+## Overview
+
+Fresh Quiz brings a host and players together in a browser-based game. The
+included quiz covers HTML, CSS, HTTP, JavaScript and APIs across 16 questions.
+
+- Join a room by code and nickname, with separate host and player views.
+- Answer timed questions with individually shuffled choices.
+- Follow live voting and automatic answer reveals through server-sent events.
+- Earn points for correct answers, with a bonus for speed.
+- Replay with the same group, resetting answers and scores.
+
+## Stack
+
+| Layer        | Technologies                                   |
+| ------------ | ---------------------------------------------- |
+| Runtime      | Deno 2, TypeScript                             |
+| Frontend     | Fresh 2, Preact, Preact signals                |
+| Database     | PostgreSQL, SQL migrations                     |
+| Real time    | Server-sent events (SSE), session cookies      |
+| Verification | Deno test, formatting, lint, type checking, k6 |
+
+## Run locally
+
+Install **Deno 2+** and **Docker with Docker Compose**.
 
 ```bash
+git clone https://github.com/ErickHTF/freshQuiz.git
+cd freshQuiz
 cp .env.example .env
 docker compose up -d
+deno install
 deno task dev
 ```
 
-When the Postgres container is created, `db/init/01-setup.sh` automatically
-applies the migrations in `db/migrations/` and the seed
-(`db/seed/001_web_basics.sql`). To recreate the database from scratch (this
-wipes the data):
+Open [localhost:5173/host](http://localhost:5173/host) to create a room, then
+[localhost:5173](http://localhost:5173/) in another browser session to join.
+Database migrations and quiz questions load when the database container is first
+created. The Angular version also uses database port `5433`; stop its database
+before starting this version.
+
+See the [development guide](docs/development.md) for database tasks and
+deployment.
+
+## Verification
 
 ```bash
-docker compose down -v && docker compose up -d
+deno task check
+deno task test
+deno task build
 ```
 
-If you'd rather run the tasks manually (for example, against an existing
-database), use `deno task db:migrate` and `deno task db:seed`.
+Keep PostgreSQL running to exercise database integration tests. See the
+[load-testing guide](loadtest/README.md) for k6 scenarios.
 
-Postgres is published on host port `5433` to avoid clashing with other local
-projects; adjust `DATABASE_URL` in `.env` if needed.
+## Architecture
 
-Open `http://localhost:5173/` to join a game or `/host` to create a room.
+```mermaid
+flowchart LR
+    Host[Host browser] -->|HTTP actions| App[Fresh server]
+    Player[Player browser] -->|HTTP actions| App
+    App -->|SSE state updates| Host
+    App -->|SSE state updates| Player
+    App -->|SQL| DB[(PostgreSQL)]
+```
 
-## Commands
+Fresh serves the pages and API routes. Interactive Preact islands receive game
+state through SSE and update the interface with signals. Server modules handle
+game rules, SQL persistence and timed answer reveals.
 
-- `deno task dev`: starts the development server.
-- `deno task db:migrate`: creates the PostgreSQL schema.
-- `deno task db:seed`: inserts the web fundamentals quiz.
-- `deno task check`: runs formatting, lint and typecheck.
-- `deno task test`: runs the tests.
-- `deno task build`: creates the production build.
+The deployment guide documents a single EC2 instance with systemd and a local
+PostgreSQL container. Restarting the app interrupts active games. Read the
+[architecture guide](docs/architecture.md) for the source layout and game
+lifecycle.
 
-The initial quiz has questions on HTML, CSS, HTTP, JavaScript, CSS selectors and
-APIs.
+## Documentation
 
-## Structure
+| Guide                                | Contents                                                   |
+| ------------------------------------ | ---------------------------------------------------------- |
+| [Development](docs/development.md)   | Requirements, local setup, configuration and test commands |
+| [Architecture](docs/architecture.md) | Source layout and game lifecycle                           |
+| [API reference](docs/api.md)         | Routes and session roles                                   |
+| [Load testing](loadtest/README.md)   | k6 scenarios and execution instructions                    |
 
-- `routes/`: HTTP routes and handlers (Fresh file-based routing); the API lives
-  in `routes/api/`.
-- `islands/`: interactive components hydrated on the client (SSE, voting,
-  ranking).
-- `components/`: SSR-only components, with no client-side JavaScript.
-- `server/`: server-only logic; `server/game/` splits the game domain into
-  repository, timed reveal and services.
-- `shared/`: isomorphic types and functions used by both the server and the
-  islands.
-- `db/`: migrations, seed and Postgres init; `db/scripts/` holds the
-  `db:migrate` and `db:seed` commands.
-- `assets/`: CSS processed by Vite (imported in `client.ts`).
-- `static/`: files served as-is (favicon, logo).
-- `deploy/`: systemd unit, deploy/reset scripts and provisioning guide.
-- `.github/`: CI and manual deploy workflows.
+## Project context
 
-The `_fresh/` folder is the build output (generated, not version-controlled).
+This is the original implementation of Fresh Quiz. The
+[Angular + Spring Boot version](https://github.com/ErickHTF/angular-spring-quiz)
+explores the same game with a different stack while preserving its rules,
+PostgreSQL schema and SSE approach.
 
-## Deploy
-
-Production runs on an EC2 instance (Amazon Linux), with `systemd` on port
-`:8000`. The `fresh_quiz` database runs on Postgres via Docker Compose on the
-instance.
-
-There are two independent workflows, both manual:
-
-- **App** (_Actions → App → Run workflow_): builds, ships only the code,
-  restarts the service and checks `/health`; if it fails, it restores the
-  previous release. It never touches the database. Restarting drops any games in
-  progress (ephemeral state).
-- **Database** (_Actions → Database → Run workflow_): type `RESET` and the
-  Postgres container is torn down and recreated (`down -v` + `up`), with
-  migrations and seed applied on init. Wipes all data.
-
-The provisioning guide is in [`deploy/SETUP.md`](deploy/SETUP.md).
-
-## Game Lifecycle
-
-- The host creates a room at `/host` with a nickname and shares the code.
-- Players join from the home page with a nickname.
-- The host's name is highlighted for everyone, in a section separate from the
-  ranking.
-- The host watches the voting live (with a timer until the reveal) and starts
-  the quiz; each question's answer is revealed automatically when time runs out.
-  After the reveal, the host moves on to the next question (or to the final
-  results) or ends early ("Encerrar quiz").
-- At the end, "Jogar novamente" (Play again) sends the room back to the lobby,
-  resetting scores and answers — connected players stay in the room.
-- "Sair da sala" (host) and "Sair" (player) clear the session cookies.
-
-## API
-
-| Method | Route                      | Description                                 |
-| ------ | -------------------------- | ------------------------------------------- |
-| POST   | `/api/games`               | Creates a room (sets the host cookie).      |
-| POST   | `/api/games/:code/join`    | Joins a room (sets the player cookies).     |
-| GET    | `/api/games/:code/state`   | Current game state.                         |
-| GET    | `/api/games/:code/events`  | SSE stream with real-time state.            |
-| POST   | `/api/games/:code/start`   | Starts the first question (host).           |
-| POST   | `/api/games/:code/answer`  | Records the player's answer.                |
-| POST   | `/api/games/:code/next`    | Advances past the revealed question (host). |
-| POST   | `/api/games/:code/finish`  | Ends the quiz early (host).                 |
-| POST   | `/api/games/:code/restart` | Back to the lobby, resetting scores (host). |
-| POST   | `/api/games/:code/leave`   | Clears the session cookies.                 |
-| GET    | `/health`                  | Health check (app + database).              |
+No license is currently included in this repository.
