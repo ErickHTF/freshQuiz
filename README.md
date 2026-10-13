@@ -6,6 +6,7 @@ code, and compete with friends through timed questions and a live leaderboard.
 **Status:** Playable learning project · Original Fresh/Preact implementation.
 
 [![CI](https://github.com/ErickHTF/freshQuiz/actions/workflows/ci.yml/badge.svg)](https://github.com/ErickHTF/freshQuiz/actions/workflows/ci.yml)
+![Deno](https://img.shields.io/badge/Deno-2-000000?logo=deno&logoColor=white) ![Fresh](https://img.shields.io/badge/Fresh-2-70C3E3) ![Preact](https://img.shields.io/badge/Preact-UI-673AB8?logo=preact&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?logo=postgresql&logoColor=white)
 
 [Run locally](#run-locally) · [Development guide](docs/development.md) ·
 [Architecture](docs/architecture.md) · [API reference](docs/api.md)
